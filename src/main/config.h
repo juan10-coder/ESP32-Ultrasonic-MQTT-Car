@@ -9,10 +9,6 @@
 #define IN3_PIN 18
 #define IN4_PIN 19
 
-// (Opcional) Pines enable si tu driver los usa
-#define ENA_PIN -1
-#define ENB_PIN -1
-
 // ==============================
 // LEDS DECORATIVOS / DIRECCIONALES
 // ==============================
