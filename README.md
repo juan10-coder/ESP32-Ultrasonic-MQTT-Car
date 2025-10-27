@@ -116,11 +116,11 @@ Define las variables de preprocesador que configuran:
 
 ## Diagramas del sistema
 
-**[Diagrama de secuencia]**  
-![Secuencia UML](image.svg)
+**Diagrama de secuencia UML**  
+![Secuencia UML](DiagramaSecuencial.png)
 
-**[Espacio para diagrama de flujo del mock del sensor HC-SR04]**
-
+**Diagrama de flujo**
+![Flujo UML](DiagramaFlujo.png)
 ---
 
 
