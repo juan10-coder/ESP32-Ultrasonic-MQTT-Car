@@ -116,13 +116,12 @@ Define las variables de preprocesador que configuran:
 
 ## Diagramas del sistema
 
-**Diagrama de secuencia UML**  
+### **Diagrama de secuencia UML**  
 ![Secuencia UML](DiagramaSecuencial.png)
 
-**Diagrama de flujo**
-![Flujo UML](DiagramaFlujo.png)
----
 
+### **Diagrama de flujo**
+![Flujo UML](image.png)
 
 ---
 
