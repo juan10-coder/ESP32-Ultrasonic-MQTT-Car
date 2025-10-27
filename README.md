@@ -116,7 +116,9 @@ Define las variables de preprocesador que configuran:
 
 ## Diagramas del sistema
 
-**[Espacio para diagrama UML de secuencia (HTTP + MQTT + Mock)]**  
+**[Diagrama de secuencia]**  
+![Secuencia UML](image.svg)
+
 **[Espacio para diagrama de flujo del mock del sensor HC-SR04]**
 
 ---
