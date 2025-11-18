@@ -141,7 +141,7 @@ Define las variables de preprocesador que configuran:
 
 ------------------------------------------------------------------------
 
-## ✅ Prueba 1 --- Conexión al puerto seguro **sin TLS**
+##  Prueba 1 --- Conexión al puerto seguro **sin TLS**
 
 **Objetivo:** Cambiar solo el puerto a `8883` sin usar TLS, para
 verificar qué ocurre.
@@ -160,7 +160,7 @@ void setup() {
 }
 ```
 
-### 🧪 Evidencia - Monitor Serial
+###  Evidencia - Monitor Serial
 
     WiFi conectado
     IP: 192.168.1.100
@@ -169,14 +169,14 @@ void setup() {
     Reintentando conexión MQTT...
     [Bucle infinito de reintentos]
 
-### 📌 Conclusión
+###  Conclusión
 
-❌ **FALLA.** El puerto `8883` exige TLS, pero se está usando
+ **FALLA.** El puerto `8883` exige TLS, pero se está usando
 `WiFiClient`, que no soporta cifrado.
 
 ------------------------------------------------------------------------
 
-## ✅ Prueba 2 --- TLS sin validación de certificado (`setInsecure()`)
+##  Prueba 2 --- TLS sin validación de certificado (`setInsecure()`)
 
 **Objetivo:** Usar `WiFiClientSecure` sin validar certificados.
 
@@ -192,19 +192,19 @@ void setup() {
 WiFiClientSecure espClient;   // Cliente TLS sin validación
 ```
 
-### 🧪 Evidencia - Monitor Serial
+###  Evidencia - Monitor Serial
 
     === PRUEBA 2: TLS SIN VALIDACIÓN DE CERTIFICADO ===
-    ⚠️ Validación de certificados DESHABILITADA
+     Validación de certificados DESHABILITADA
     Intentando conexión MQTT TLS (sin validación)... ✓ Conectado!
     Distancia publicada vía TLS: 145.67 cm
     Distancia publicada vía TLS: 78.23 cm
 
-### 📌 Conclusión
+###  Conclusión
 
 ✔ **FUNCIONA**, pero:
 
-⚠️ **Vulnerable a ataques Man-in-the-Middle (MitM)**\
+ **Vulnerable a ataques Man-in-the-Middle (MitM)**\
 Los datos viajan cifrados pero no se verifica el servidor.
 
 ------------------------------------------------------------------------
@@ -221,7 +221,7 @@ WiFiClientSecure espClient;
 PubSubClient client(espClient);
 ```
 
-### 🧪 Evidencia - Monitor Serial
+###  Evidencia - Monitor Serial
 
     === PRUEBA 3: TLS CON VALIDACIÓN (SIN CERTIFICADO) ===
     ✓ Validación habilitada
@@ -234,14 +234,14 @@ PubSubClient client(espClient);
     Intento 2... rc=-2 TLS Error: -1
     Reintentando...
 
-### 📌 Conclusión
+###  Conclusión
 
-❌ **FALLA**, como se esperaba.\
+ **FALLA**, como se esperaba.\
 El ESP32 no puede validar el certificado sin un CA cargado.
 
 ------------------------------------------------------------------------
 
-## ✅ Prueba 4 --- TLS con certificado CA **válido**
+##  Prueba 4 --- TLS con certificado CA **válido**
 
 **Objetivo:** Proveer el certificado correcto del broker y validar la
 conexión segura.
@@ -252,7 +252,7 @@ conexión segura.
 openssl s_client -showcerts -connect test.mosquitto.org:8883 < /dev/null   | openssl x509 -outform PEM > mosquitto_ca.pem
 ```
 
-### 🧪 Evidencia - Monitor Serial
+###  Evidencia - Monitor Serial
 
     === PRUEBA 4: TLS CON CERTIFICADO VÁLIDO ===
     ✓ Cargando certificado CA...
@@ -261,7 +261,7 @@ openssl s_client -showcerts -connect test.mosquitto.org:8883 < /dev/null   | ope
 
     🔒 Distancia publicada de forma SEGURA: 123.45 cm
 
-### 📌 Conclusión
+###  Conclusión
 
 ✔ **ÉXITO TOTAL.**\
 TLS habilitado + validación correcta → comunicación *segura y protegida*
@@ -269,7 +269,7 @@ contra ataques MitM.
 
 ------------------------------------------------------------------------
 
-# 📊 Resumen de Resultados
+#  Resumen de Resultados
 
   ------------------------------------------------------------------------------------
   Prueba    Cliente              Puerto    Certificado     Resultado     Seguridad
@@ -288,7 +288,7 @@ contra ataques MitM.
 
 ------------------------------------------------------------------------
 
-# 📁 Archivos recomendados
+#  Archivos recomendados
 
 ### `certificates.h`
 
@@ -304,7 +304,7 @@ contra ataques MitM.
 
 ------------------------------------------------------------------------
 
-# 🛡 Recomendaciones Finales para Producción
+#  Recomendaciones Finales para Producción
 
 -   Nunca usar `setInsecure()` en dispositivos reales\
 -   Implementar actualización OTA para renovar certificados\
@@ -316,7 +316,7 @@ contra ataques MitM.
 
 ------------------------------------------------------------------------
 
-# 📦 Estructura del Proyecto
+#  Estructura del Proyecto
 
     proyecto/
     ├── config.h          // Configuración
@@ -326,7 +326,7 @@ contra ataques MitM.
 
 ------------------------------------------------------------------------
 
-# 🔄 Script para renovación de certificados
+#  Script para renovación de certificados
 
 ``` bash
 #!/bin/bash
