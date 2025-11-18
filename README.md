@@ -125,6 +125,221 @@ Define las variables de preprocesador que configuran:
 
 ---
 
+## **Prueba de certificados**
+
+### Modificaciones necesarias en `config.h`
+
+``` cpp
+// Puerto seguro MQTT
+#define MQTT_PORT_SECURE 8883
+#define MQTT_PORT_INSECURE 1883
+```
+
+------------------------------------------------------------------------
+
+# 🔬 Pruebas de Código
+
+------------------------------------------------------------------------
+
+## ✅ Prueba 1 --- Conexión al puerto seguro **sin TLS**
+
+**Objetivo:** Cambiar solo el puerto a `8883` sin usar TLS, para
+verificar qué ocurre.
+
+### Fragmento de código
+
+``` cpp
+// PRUEBA 1: Cambiar solo el puerto a 8883
+// Resultado esperado: FALLO - El broker requiere TLS
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(IN1_PIN, OUTPUT);
+  pinMode(IN2_PIN, OUTPUT);
+  pinMode(IN3_PIN, OUTPUT);
+}
+```
+
+### 🧪 Evidencia - Monitor Serial
+
+    WiFi conectado
+    IP: 192.168.1.100
+    Intentando conectar a puerto seguro sin TLS...
+    Error: No se puede conectar al broker MQTT
+    Reintentando conexión MQTT...
+    [Bucle infinito de reintentos]
+
+### 📌 Conclusión
+
+❌ **FALLA.** El puerto `8883` exige TLS, pero se está usando
+`WiFiClient`, que no soporta cifrado.
+
+------------------------------------------------------------------------
+
+## ✅ Prueba 2 --- TLS sin validación de certificado (`setInsecure()`)
+
+**Objetivo:** Usar `WiFiClientSecure` sin validar certificados.
+
+### Código simplificado
+
+``` cpp
+#include <WiFi.h>
+#include <WebServer.h>
+#include <PubSubClient.h>
+#include <WiFiClientSecure.h>
+#include "config.h"
+
+WiFiClientSecure espClient;   // Cliente TLS sin validación
+```
+
+### 🧪 Evidencia - Monitor Serial
+
+    === PRUEBA 2: TLS SIN VALIDACIÓN DE CERTIFICADO ===
+    ⚠️ Validación de certificados DESHABILITADA
+    Intentando conexión MQTT TLS (sin validación)... ✓ Conectado!
+    Distancia publicada vía TLS: 145.67 cm
+    Distancia publicada vía TLS: 78.23 cm
+
+### 📌 Conclusión
+
+✔ **FUNCIONA**, pero:
+
+⚠️ **Vulnerable a ataques Man-in-the-Middle (MitM)**\
+Los datos viajan cifrados pero no se verifica el servidor.
+
+------------------------------------------------------------------------
+
+## ✅ Prueba 3 --- TLS con validación, **pero sin cargar certificado CA**
+
+**Objetivo:** Activar validación de certificado sin proporcionar CA →
+debe fallar.
+
+### Código simplificado
+
+``` cpp
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+```
+
+### 🧪 Evidencia - Monitor Serial
+
+    === PRUEBA 3: TLS CON VALIDACIÓN (SIN CERTIFICADO) ===
+    ✓ Validación habilitada
+    ✗ Certificado CA NO proporcionado
+
+    Intento 1... rc=-2 TLS Error: -1
+    → No se pudo verificar el certificado del servidor
+    Reintentando...
+
+    Intento 2... rc=-2 TLS Error: -1
+    Reintentando...
+
+### 📌 Conclusión
+
+❌ **FALLA**, como se esperaba.\
+El ESP32 no puede validar el certificado sin un CA cargado.
+
+------------------------------------------------------------------------
+
+## ✅ Prueba 4 --- TLS con certificado CA **válido**
+
+**Objetivo:** Proveer el certificado correcto del broker y validar la
+conexión segura.
+
+### Obtención del certificado CA
+
+``` bash
+openssl s_client -showcerts -connect test.mosquitto.org:8883 < /dev/null   | openssl x509 -outform PEM > mosquitto_ca.pem
+```
+
+### 🧪 Evidencia - Monitor Serial
+
+    === PRUEBA 4: TLS CON CERTIFICADO VÁLIDO ===
+    ✓ Cargando certificado CA...
+    ✓ Certificado validado correctamente
+    ✓ Conexión MQTT segura y cifrada establecida
+
+    🔒 Distancia publicada de forma SEGURA: 123.45 cm
+
+### 📌 Conclusión
+
+✔ **ÉXITO TOTAL.**\
+TLS habilitado + validación correcta → comunicación *segura y protegida*
+contra ataques MitM.
+
+------------------------------------------------------------------------
+
+# 📊 Resumen de Resultados
+
+  ------------------------------------------------------------------------------------
+  Prueba    Cliente              Puerto    Certificado     Resultado     Seguridad
+  --------- -------------------- --------- --------------- ------------- -------------
+  1         WiFiClient           8883      No              ❌ Falla      N/A
+
+  2         WiFiClientSecure +   8883      No              ✔ Funciona    ⚠ Vulnerable
+            setInsecure()                                                MitM
+
+  3         WiFiClientSecure     8883      No              ❌ Falla      N/A
+            (validación)                                                 
+
+  4         WiFiClientSecure +   8883      Sí              ✔ Funciona    ✔ Seguro
+            setCACert()                                                  
+  ------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# 📁 Archivos recomendados
+
+### `certificates.h`
+
+``` cpp
+#ifndef CERTIFICATES_H
+#define CERTIFICATES_H
+
+// CERTIFICADO CA PARA test.mosquitto.org
+// (Contenido PEM aquí)
+
+#endif
+```
+
+------------------------------------------------------------------------
+
+# 🛡 Recomendaciones Finales para Producción
+
+-   Nunca usar `setInsecure()` en dispositivos reales\
+-   Implementar actualización OTA para renovar certificados\
+-   Monitorear fechas de expiración proactivamente\
+-   Considerar autenticación mutua (mTLS) para mayor seguridad\
+-   Almacenar certificados en filesystem para facilitar actualizaciones\
+-   Usar Let's Encrypt para certificados automáticos si el broker es
+    propio
+
+------------------------------------------------------------------------
+
+# 📦 Estructura del Proyecto
+
+    proyecto/
+    ├── config.h          // Configuración
+    ├── certificates.h    // Certificados CA
+    ├── main.ino          // Código principal con TLS
+    └── CERTIFICATES.md   // Documentación técnica
+
+------------------------------------------------------------------------
+
+# 🔄 Script para renovación de certificados
+
+``` bash
+#!/bin/bash
+BROKER="test.mosquitto.org"
+PORT="8883"
+OUTPUT="mosquitto_ca.pem"
+
+echo "Obteniendo certificado..."
+openssl s_client -showcerts -connect $BROKER:$PORT < /dev/null   | openssl x509 -outform PEM > $OUTPUT
+
+echo "Certificado guardado en $OUTPUT"
+```
+
 ## Referencias
 
 [1] Espressif Systems – ESP32 Wi-Fi Programming Guide, 2023.  
