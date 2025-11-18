@@ -125,7 +125,19 @@ Define las variables de preprocesador que configuran:
 
 ---
 
-## **Prueba de certificados**
+# Pruebas de Conexión MQTT con TLS en ESP32
+
+Este documento describe las pruebas realizadas para conectar un ESP32 a
+un broker MQTT utilizando diferentes configuraciones de seguridad
+(puerto inseguro, TLS sin validación, TLS con validación y TLS con
+certificado CA).
+
+Incluye código, evidencias de monitor serial y conclusiones de seguridad
+para cada escenario.
+
+------------------------------------------------------------------------
+
+## Preparación del Entorno
 
 ### Modificaciones necesarias en `config.h`
 
@@ -137,7 +149,7 @@ Define las variables de preprocesador que configuran:
 
 ------------------------------------------------------------------------
 
-# 🔬 Pruebas de Código
+#  Pruebas de Código
 
 ------------------------------------------------------------------------
 
@@ -195,7 +207,7 @@ WiFiClientSecure espClient;   // Cliente TLS sin validación
 ###  Evidencia - Monitor Serial
 
     === PRUEBA 2: TLS SIN VALIDACIÓN DE CERTIFICADO ===
-     Validación de certificados DESHABILITADA
+    ⚠️ Validación de certificados DESHABILITADA
     Intentando conexión MQTT TLS (sin validación)... ✓ Conectado!
     Distancia publicada vía TLS: 145.67 cm
     Distancia publicada vía TLS: 78.23 cm
@@ -209,7 +221,7 @@ Los datos viajan cifrados pero no se verifica el servidor.
 
 ------------------------------------------------------------------------
 
-## ✅ Prueba 3 --- TLS con validación, **pero sin cargar certificado CA**
+##  Prueba 3 --- TLS con validación, **pero sin cargar certificado CA**
 
 **Objetivo:** Activar validación de certificado sin proporcionar CA →
 debe fallar.
@@ -236,7 +248,7 @@ PubSubClient client(espClient);
 
 ###  Conclusión
 
- **FALLA**, como se esperaba.\
+❌ **FALLA**, como se esperaba.\
 El ESP32 no puede validar el certificado sin un CA cargado.
 
 ------------------------------------------------------------------------
@@ -259,7 +271,7 @@ openssl s_client -showcerts -connect test.mosquitto.org:8883 < /dev/null   | ope
     ✓ Certificado validado correctamente
     ✓ Conexión MQTT segura y cifrada establecida
 
-    🔒 Distancia publicada de forma SEGURA: 123.45 cm
+     Distancia publicada de forma SEGURA: 123.45 cm
 
 ###  Conclusión
 
@@ -319,11 +331,9 @@ contra ataques MitM.
 #  Estructura del Proyecto
 
     proyecto/
-    ├── config.h          // Configuración
-    ├── certificates.h    // Certificados CA
-    ├── main.ino          // Código principal con TLS
-    └── CERTIFICATES.md   // Documentación técnica
-
+    ├── config.h          // Configuración y certificados
+    └── main.ino          // Código principal con TLS
+    
 ------------------------------------------------------------------------
 
 #  Script para renovación de certificados
@@ -339,6 +349,7 @@ openssl s_client -showcerts -connect $BROKER:$PORT < /dev/null   | openssl x509 
 
 echo "Certificado guardado en $OUTPUT"
 ```
+
 
 ## Referencias
 
