@@ -282,12 +282,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 }
 
 void setupMQTT() {
-  // ⚠ TLS cifrado pero sin validar certificado (para evitar problemas de hora/CA)
   secureClient.setInsecure();
 
   mqttClient.setServer(MQTT_BROKER, MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
-  Serial.println("[MQTT] Configurado broker test.mosquitto.org:8883 (TLS sin verificación)");
+  Serial.println("[MQTT] Configurado broker test.mosquitto.org:8883");
 }
 
 

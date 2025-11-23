@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carro IoT ESP32</title>
+
+<!-- p5.js para el radar -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0b1220;
+    --card:#0f172a;
+    --txt:#e5e7eb;
+    --muted:#a3b0c2;
+    --edge:#1f2a40;
+    --accent:#22d3ee;
+    --ok:#22c55e;
+    --danger:#ef4444;
+    --btn:#111827;
+  }
+  .light{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --txt:#0f172a;
+    --muted:#46556d;
+    --edge:#e6e9f0;
+    --accent:#0891b2;
+    --ok:#16a34a;
+    --danger:#dc2626;
+    --btn:#f3f4f6;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--txt);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+  }
+  .wrap{
+    width:100%;
+    max-width:900px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--edge);
+    border-radius:18px;
+    box-shadow:0 12px 30px rgba(0,0,0,.15);
+  }
+  .header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; border-bottom:1px solid var(--edge);
+  }
+  .h1{ font-size:1.15rem; font-weight:800; letter-spacing:.2px; }
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .pill{ padding:6px 10px; border-radius:999px; border:1px solid var(--edge); background:transparent; color:var(--muted); font-size:.9rem; }
+  .accent{ color:var(--accent); }
+  .ok{ color:var(--ok); }
+  .danger{ color:var(--danger); }
+
+  /* Radar arriba */
+  .radarBox{ padding:12px; display:flex; justify-content:center; }
+  #radarContainer{ width:100%; display:flex; justify-content:center; }
+
+  /* Panel inferior con controles */
+  .controls{ padding:16px; display:grid; gap:16px; grid-template-columns:1fr 260px; }
+  @media (max-width:840px){ .controls{ grid-template-columns:1fr; } }
+
+  .statusBox{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .statusItem{ padding:10px 12px; border:1px solid var(--edge); border-radius:12px; background:transparent; }
+  .big{ font-size:1.1rem; font-weight:700; }
+
+  /* D-pad */
+  .dpad{
+    display:grid; gap:10px;
+    grid-template-columns:repeat(3,90px);
+    grid-template-rows:repeat(3,90px);
+    justify-content:center;
+  }
+  .btn{
+    background:var(--btn); color:var(--txt);
+    border:1px solid var(--edge);
+    border-radius:16px; font-weight:800; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .06s ease, box-shadow .15s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+  }
+  .btn:hover{ box-shadow:0 6px 18px rgba(0,0,0,.18); }
+  .btn:active{ transform:scale(.98); }
+  .btn.primary{ border-color:rgba(255,255,255,.12); }
+  .btn.stop{ background:linear-gradient(180deg, #7f1d1d, #991b1b); border-color:#b91c1c; }
+  .btn.stop:hover{ background:linear-gradient(180deg, #8b1e1e, #a11c1c); }
+
+  .up{ grid-column:2; grid-row:1; }
+  .left{ grid-column:1; grid-row:2; }
+  .center{ grid-column:2; grid-row:2; }
+  .right{ grid-column:3; grid-row:2; }
+  .down{ grid-column:2; grid-row:3; }
+
+  .kbd{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco; font-size:.85rem; padding:.1rem .45rem; border-radius:6px; border:1px solid var(--edge); background:transparent; }
+
+  .toolbar{ display:flex; gap:10px; align-items:center; }
+  .toggle{
+    padding:8px 10px; border-radius:12px; background:var(--btn); border:1px solid var(--edge); cursor:pointer; font-weight:700;
+  }
+
+  /* Car SVG size */
+  .carSvg{ width:46px; height:46px; }
+  .hint{ color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="h1">Carro IoT ESP32</div>
+        <div class="toolbar">
+          <span class="pill">Distancia: <span id="distText" class="big accent">--</span> <span class="hint">cm</span></span>
+          <span class="pill" id="mqttPill">MQTT: <span class="danger">N/D</span></span>
+          <button id="themeBtn" class="toggle" aria-label="Cambiar tema">🌗 Tema</button>
+        </div>
+      </div>
+
+      <!-- RADAR ARRIBA -->
+      <div class="radarBox">
+        <div id="radarContainer"></div>
+      </div>
+
+      <!-- CONTROLES Y ESTADO -->
+      <div class="controls">
+        <!-- Estado e indicaciones -->
+        <div class="statusBox">
+          <div class="statusItem">Teclado PC: <span class="kbd">↑</span> <span class="kbd">↓</span> <span class="kbd">←</span> <span class="kbd">→</span> · <span class="kbd">Espacio</span> (Stop)</div>
+          <div class="statusItem">Velocidad fija: <span class="big">200</span></div>
+          <div class="statusItem">REST base: <span id="baseUrl" class="hint"></span></div>
+        </div>
+
+        <!-- D-PAD -->
+        <div class="dpad">
+          <button class="btn primary up"    onclick="sendMove('forward')" aria-label="Adelante">↑</button>
+          <button class="btn primary left"  onclick="sendMove('left')"     aria-label="Izquierda">←</button>
+
+          <!-- Botón central con 'car model' y STOP -->
+          <button class="btn stop center"   onclick="sendMove('stop')"     aria-label="Stop">
+            <svg class="carSvg" viewBox="0 0 64 64" aria-hidden="true">
+              <rect x="12" y="24" width="40" height="16" rx="3" fill="#111" stroke="#eee" stroke-width="2"></rect>
+              <rect x="18" y="18" width="28" height="10" rx="3" fill="#111" stroke="#eee" stroke-width="2"></rect>
+              <circle cx="20" cy="42" r="6" fill="#222" stroke="#eee" stroke-width="2"></circle>
+              <circle cx="44" cy="42" r="6" fill="#222" stroke="#eee" stroke-width="2"></circle>
+              <!-- Señal STOP -->
+              <rect x="28" y="26" width="8" height="12" rx="2" fill="#ef4444" stroke="#fff" stroke-width="1.5"></rect>
+            </svg>
+          </button>
+
+          <button class="btn primary right" onclick="sendMove('right')"    aria-label="Derecha">→</button>
+          <button class="btn primary down"  onclick="sendMove('backward')" aria-label="Atrás">↓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint" style="text-align:center">
+      Consejo: mantén presionadas las flechas para movimiento continuo. Al soltar, se envía Stop automáticamente.
+    </div>
+  </div>
+
+<script>
+/* ====================== Tema claro/oscuro ====================== */
+(function initTheme(){
+  const root = document.documentElement;
+  const saved = localStorage.getItem('theme') || 'dark';
+  if(saved === 'light'){ root.classList.add('light'); }
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    root.classList.toggle('light');
+    localStorage.setItem('theme', root.classList.contains('light') ? 'light' : 'dark');
+  });
+})();
+
+/* ====================== REST base ====================== */
+const apiBase = window.location.origin;
+document.getElementById('baseUrl').textContent = apiBase;
+
+/* ====================== Movimiento ====================== */
+const FIXED_SPEED = 200;
+let keyState = { up:false, down:false, left:false, right:false };
+let lastCmd = '';
+
+function sendMove(dir){
+  lastCmd = dir;
+  fetch(`${apiBase}/api/v1/move?dir=${dir}&speed=${FIXED_SPEED}`, { method:'POST' })
+    .catch(()=>{});
+}
+
+function handleKeys(e, down){
+  if(e.repeat) return;
+  switch(e.key){
+    case 'ArrowUp':    keyState.up = down; break;
+    case 'ArrowDown':  keyState.down = down; break;
+    case 'ArrowLeft':  keyState.left = down; break;
+    case 'ArrowRight': keyState.right = down; break;
+    case ' ':          if(down) sendMove('stop'); return;
+    default: return;
+  }
+  // decidir comando según prioridad
+  if(keyState.up && !keyState.down && !keyState.left && !keyState.right)      sendMove('forward');
+  else if(keyState.down && !keyState.up && !keyState.left && !keyState.right)  sendMove('backward');
+  else if(keyState.left && !keyState.right && !keyState.up && !keyState.down)  sendMove('left');
+  else if(keyState.right && !keyState.left && !keyState.up && !keyState.down)  sendMove('right');
+  else if(!keyState.up && !keyState.down && !keyState.left && !keyState.right) sendMove('stop');
+}
+window.addEventListener('keydown', e => handleKeys(e, true));
+window.addEventListener('keyup',   e => handleKeys(e, false));
+
+/* ====================== Radar (polling REST) ====================== */
+let radarPoints = [];          // [{angle_deg, distance_cm}]
+const MAX_DIST_CM = 200;
+const OBSTACLE_CM = 30;
+
+async function fetchRadar(){
+  try{
+    const r = await fetch(`${apiBase}/api/v1/radar`);
+    if(!r.ok) return;
+    const data = await r.json();
+    radarPoints = Array.isArray(data) ? data : [];
+    // actualizar distancia última
+    if(radarPoints.length){
+      const last = radarPoints[radarPoints.length-1];
+      const d = last && last.distance_cm != null ? Number(last.distance_cm) : null;
+      document.getElementById('distText').textContent = (d==null? '--' : d.toFixed(1));
+    }
+    // marcador de “MQTT ok / N/D” si lo estás usando como puente
+    document.getElementById('mqttPill').innerHTML = 'MQTT: <span class="'+(radarPoints.length?'ok':'danger')+'">'+(radarPoints.length?'OK':'N/D')+'</span>';
+  }catch(_){}
+}
+setInterval(fetchRadar, 400);
+fetchRadar();
+
+/* ====================== Sketch p5.js (semicírculo) ====================== */
+new p5((sk) => {
+  let cx, cy, maxR;
+
+  sk.setup = () => {
+    const canvas = sk.createCanvas(Math.min(820, sk.windowWidth-40), 280);
+    canvas.parent('radarContainer');
+    cx = sk.width/2;
+    cy = sk.height-10;
+    maxR = Math.min(cx, cy) - 10;
+  };
+
+  sk.windowResized = () => {
+    const w = Math.min(820, sk.windowWidth-40);
+    sk.resizeCanvas(w, 280);
+    cx = sk.width/2; cy = sk.height-10; maxR = Math.min(cx, cy)-10;
+  };
+
+  sk.draw = () => {
+    // fondo según tema
+    const isLight = document.documentElement.classList.contains('light');
+    sk.background(isLight ? 255 : 0);
+
+    // círculos guía
+    sk.noFill(); sk.stroke( isLight ? '#16a34a' : '#22c55e' );
+    sk.arc(cx, cy, 2*maxR, 2*maxR, Math.PI, 2*Math.PI);
+    sk.arc(cx, cy, 1.2*maxR, 1.2*maxR, Math.PI, 2*Math.PI);
+    sk.arc(cx, cy, .6*maxR, .6*maxR, Math.PI, 2*Math.PI);
+
+    // línea central
+    sk.stroke(isLight ? '#0ea5e9' : '#22d3ee');
+    sk.line(cx, cy, cx, cy-maxR);
+
+    // puntos
+    radarPoints.forEach(p=>{
+      if(p.distance_cm==null) return;
+      const dist = Math.min(Number(p.distance_cm)||0, MAX_DIST_CM);
+      const r = dist * (maxR / MAX_DIST_CM);
+      const norm = (Number(p.angle_deg)-20)/140;       // 20..160 -> 0..1
+      const theta = Math.PI*(1-norm);                  // izquierda PI, derecha 0
+      const x = cx + r*Math.cos(theta);
+      const y = cy - r*Math.sin(theta);
+      const near = dist <= OBSTACLE_CM;
+      sk.noStroke();
+      sk.fill(near ? (isLight?'#dc2626':'#ef4444') : (isLight?'#16a34a':'#22c55e'));
+      sk.ellipse(x, y, 7, 7);
+    });
+  };
+});
+</script>
+</body>
+</html>
