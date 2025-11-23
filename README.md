@@ -48,6 +48,8 @@ La implementación se desarrolló bajo principios de ingeniería modular, emplea
 
 ## Arquitectura general
 
+![Flujo UML](montajefisicoIOT.png)
+
 **[Espacio para diagrama de arquitectura del sistema (bloques ESP32 - MQTT - Cliente)]**
 
 ---
