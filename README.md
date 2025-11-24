@@ -69,6 +69,7 @@ La arquitectura del proyecto se compone de tres capas principales:
    Incluye el ESP32, el puente H L298N, los motores DC, el sensor ultrasónico HC-SR04 y el servo motor encargado de rotar el sensor para formar el radar.
 
 ![Flujo UML](montajefisicoIOT.png)
+![Flujo UML](carrofisico.png)
 
 3. **Capa de Comunicación:**  
    Basada en HTTP (API REST) para los comandos de movimiento y MQTT con cifrado TLS para la transmisión de datos de sensores en tiempo real hacia la interfaz web.
