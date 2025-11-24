@@ -1,8 +1,11 @@
 # Control y Simulación de Sensor Ultrasonido con ESP32 + MQTT
 
-Este proyecto implementa un sistema IoT con ESP32 capaz de controlar el movimiento de un vehículo mediante HTTP y MQTT, además de simular lecturas de un sensor ultrasónico (HC-SR04) que se publican periódicamente a un tópico MQTT distinto.
+El presente documento describe el desarrollo, implementación y análisis técnico del proyecto de vehículo IoT de dos ruedas (2WD) controlado mediante un microcontrolador ESP32, que integra tecnologías de comunicación segura, visualización de datos en tiempo real y control remoto desde una interfaz web.
 
-El sistema combina comunicación en red, procesamiento local, simulación de sensores y publicación en la nube, manteniendo buenas prácticas de modularización con archivos `.h` para configuraciones y variables de preprocesador.
+El sistema fue diseñado con el propósito de demostrar la integración entre hardware, software y protocolos de comunicación IoT, aplicando buenas prácticas de seguridad, eficiencia energética y modularidad de código.
+
+El prototipo se apoya en el uso de protocolos REST y MQTT cifrados con TLS, junto con una interfaz gráfica basada en tecnologías web modernas como HTML5, CSS3, JavaScript, p5.js y MQTT.js.  
+Este documento presenta la estructura del sistema, los endpoints, los tópicos utilizados, las librerías, el análisis de memoria y los resultados de pruebas funcionales y de seguridad.
 
 ---
 
@@ -19,6 +22,18 @@ La implementación se desarrolló bajo principios de ingeniería modular, emplea
 **Palabras clave:** IoT, ESP32, MQTT, HC-SR04, Arduino, Simulación, Ingeniería IEEE.
 
 ---
+
+## Objetivos Generales y Específicos
+
+**Objetivo general:**  
+Diseñar y construir un robot móvil controlado remotamente que utilice comunicación MQTT cifrada y permita la detección y visualización de obstáculos a través de una interfaz web en tiempo real.
+
+**Objetivos específicos:**
+- Implementar un sistema de detección de obstáculos utilizando un sensor ultrasónico HC-SR04.  
+- Desarrollar una API RESTful en el ESP32 para permitir el control de movimiento del robot mediante peticiones HTTP.  
+- Establecer una comunicación segura con el servidor MQTT utilizando TLS 1.2 (WSS).  
+- Implementar un panel web interactivo con radar visual y control de movimiento mediante teclado o botones.  
+- Documentar la arquitectura del sistema, los endpoints, los tópicos MQTT, el uso de memoria, las pruebas realizadas y las oportunidades de mejora.  
 
 ## Requisitos del sistema
 
@@ -46,28 +61,61 @@ La implementación se desarrolló bajo principios de ingeniería modular, emplea
 
 ---
 
-## Arquitectura general
+## Arquitectura General del Sistema
+
+La arquitectura del proyecto se compone de tres capas principales:
+
+1. **Capa Física:**  
+   Incluye el ESP32, el puente H L298N, los motores DC, el sensor ultrasónico HC-SR04 y el servo motor encargado de rotar el sensor para formar el radar.
 
 ![Flujo UML](montajefisicoIOT.png)
 
+3. **Capa de Comunicación:**  
+   Basada en HTTP (API REST) para los comandos de movimiento y MQTT con cifrado TLS para la transmisión de datos de sensores en tiempo real hacia la interfaz web.
+
+4. **Capa de Visualización y Control:**  
+   Desarrollada en HTML, CSS, p5.js y MQTT.js, muestra la distancia detectada, el radar en tiempo real y permite el control remoto del vehículo.
+
 ![Flujo UML](DiagramaSistema.png)
+
+### Diagrama de Arquitectura del Sistema
+
+```mermaid
+graph TD
+    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web (p5.js + MQTT.js)]
+    B -->|Comandos REST| A
+    A -->|Sensor Ultrasónico HC-SR04| C[Detección de Obstáculos]
+    A -->|Publica datos cifrados MQTT TLS| D[(Broker Mosquitto TLS)]
+    D -->|WSS (WebSocket Secure)| B
+    subgraph MQTT Topics
+        T1["carro/distancia"]
+        T2["carro/mapa"]
+        T3["carro/movimiento"]
+    end
+```
 
 ---
 
-## Descripción técnica
+## Descripción Técnica
 
-El proyecto consta de dos archivos principales:
+El sistema está controlado por un ESP32 DevKit v1, programado en lenguaje C++ mediante el entorno Arduino IDE 2.3.2.  
+El ESP32 cumple tres funciones simultáneas:
+1. Servidor web local para servir la interfaz y los endpoints REST.  
+2. Cliente MQTT seguro para enviar y recibir datos con cifrado TLS.  
+3. Controlador físico de los motores, sensor ultrasónico y servo motor.
 
-### 1. `main.ino`
-Contiene la lógica de conexión WiFi, endpoints HTTP, control de motores, simulación del sensor y publicación periódica a MQTT.
+El sensor HC-SR04 se encarga de detectar obstáculos midiendo la distancia mediante el tiempo de retorno de una onda ultrasónica.  
+Los datos recolectados se publican de manera continua en los tópicos MQTT `carro/distancia` y `carro/mapa`.  
+La interfaz web interpreta estas lecturas y las representa visualmente en un radar que muestra objetos cercanos en color rojo y zonas despejadas en verde.
 
-### 2. `config.h`
-Define las variables de preprocesador que configuran:
-- Pines del ESP32 (motores, LEDs, sensor)
-- Credenciales WiFi
-- Configuración MQTT (broker, tópicos, ID de cliente)
 
-**[Espacio para captura del código o estructura de carpetas del repositorio]**
+**Usando MicroPython**
+
+![Flujo UML](montajefisicoIOT.png)
+
+**Usando C++ Arduino IDE**
+
+![Flujo UML](micropython.png)
 
 ---
 
