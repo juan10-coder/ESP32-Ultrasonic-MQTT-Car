@@ -1,0 +1,232 @@
+{
+	"info": {
+		"_postman_id": "edcb2305-9841-40a1-a5b4-5c431f919116",
+		"name": "IOT FINAL",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49050136",
+		"_collection_link": "https://santiagobazzanir-2589565.postman.co/workspace/RexKill-273's-Workspace~766aa196-033b-454e-8ad4-e355c351726a/collection/49050136-edcb2305-9841-40a1-a5b4-5c431f919116?action=share&source=collection_link&creator=49050136"
+	},
+	"item": [
+		{
+			"name": "http://192.168.1.28/",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/api/v1/healthcheck",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						"api",
+						"v1",
+						"healthcheck"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/api/v1/healthcheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/api/v1/healthcheck",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						"api",
+						"v1",
+						"healthcheck"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/api/v1/healthcheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/api/v1/healthcheck",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						"api",
+						"v1",
+						"healthcheck"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/api/v1/healthcheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.1.28/api/v1/healthcheck",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						"api",
+						"v1",
+						"healthcheck"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://192.168.1.28/api/v1/healthcheck",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.1.28/api/v1/move?dir=forward&speed=200",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"1",
+						"28"
+					],
+					"path": [
+						"api",
+						"v1",
+						"move"
+					],
+					"query": [
+						{
+							"key": "dir",
+							"value": "forward"
+						},
+						{
+							"key": "speed",
+							"value": "200"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
