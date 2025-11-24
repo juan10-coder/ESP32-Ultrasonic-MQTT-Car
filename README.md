@@ -116,7 +116,7 @@ La interfaz web interpreta estas lecturas y las representa visualmente en un rad
 
 **Usando C++ Arduino IDE**
 
-![Flujo UML](c++.png)
+![Flujo UML](C++.png)
 
 ---
 
