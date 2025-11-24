@@ -82,7 +82,7 @@ La arquitectura del proyecto se compone de tres capas principales:
 
 ```mermaid
 graph TD
-    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web)]
+    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web (p5.js + MQTT.js)]
     B -->|Comandos REST| A
     A -->|Sensor Ultrasónico HC-SR04| C[Detección de Obstáculos]
     A -->|Publica datos cifrados MQTT TLS| D[(Broker Mosquitto TLS)]
@@ -93,6 +93,7 @@ graph TD
         T3["carro/movimiento"]
     end
 ```
+
 ---
 
 ## Descripción Técnica
@@ -404,95 +405,6 @@ PubSubClient client(espClient);
     Intento 2... rc=-2 TLS Error: -1
     Reintentando...
 
-###  Conclusión
-
-❌ **FALLA**, como se esperaba.\
-El ESP32 no puede validar el certificado sin un CA cargado.
-
-------------------------------------------------------------------------
-
-##  Prueba 4 --- TLS con certificado CA **válido**
-
-**Objetivo:** Proveer el certificado correcto del broker y validar la
-conexión segura.
-
-### Obtención del certificado CA
-
-``` bash
-openssl s_client -showcerts -connect test.mosquitto.org:8883 < /dev/null   | openssl x509 -outform PEM > mosquitto_ca.pem
-```
-
-###  Evidencia - Monitor Serial
-
-    === PRUEBA 4: TLS CON CERTIFICADO VÁLIDO ===
-    ✓ Cargando certificado CA...
-    ✓ Certificado validado correctamente
-    ✓ Conexión MQTT segura y cifrada establecida
-
-     Distancia publicada de forma SEGURA: 123.45 cm
-
-###  Conclusión
-
-✔ **ÉXITO TOTAL.**\
-TLS habilitado + validación correcta → comunicación *segura y protegida*
-contra ataques MitM.
-
-------------------------------------------------------------------------
-
-#  Resumen de Resultados
-
-  ------------------------------------------------------------------------------------
-  Prueba    Cliente              Puerto    Certificado     Resultado     Seguridad
-  --------- -------------------- --------- --------------- ------------- -------------
-  1         WiFiClient           8883      si              ❌ Falla      N/A
-
-  2         WiFiClientSecure +   8883      si              ✔ Funciona    ⚠ Vulnerable
-            setInsecure()                                                MitM
-
-  3         WiFiClientSecure     8883      No              ❌ Falla      N/A
-            (validación)                                                 
-
-  4         WiFiClientSecure +   8883      Sí              ✔ Funciona    ✔ Seguro
-            setCACert()                                                  
-  ------------------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-#  Archivos recomendados
-
-### `certificates.h`
-
-``` cpp
-#ifndef CERTIFICATES_H
-#define CERTIFICATES_H
-
-// CERTIFICADO CA PARA test.mosquitto.org
-// (Contenido PEM aquí)
-
-#endif
-```
-
-------------------------------------------------------------------------
-
-#  Recomendaciones Finales para Producción
-
--   Nunca usar `setInsecure()` en dispositivos reales\
--   Implementar actualización OTA para renovar certificados\
--   Monitorear fechas de expiración proactivamente\
--   Considerar autenticación mutua (mTLS) para mayor seguridad\
--   Almacenar certificados en filesystem para facilitar actualizaciones\
--   Usar Let's Encrypt para certificados automáticos si el broker es
-    propio
-
-------------------------------------------------------------------------
-
-#  Estructura del Proyecto
-
-    proyecto/
-    ├── config.h          // Configuración y certificados
-    └── main.ino          // Código principal con TLS
-    
-------------------------------------------------------------------------
 
 #  Script para renovación de certificados
 
@@ -508,6 +420,41 @@ openssl s_client -showcerts -connect $BROKER:$PORT < /dev/null   | openssl x509 
 echo "Certificado guardado en $OUTPUT"
 ```
 
+## Limitaciones Detectadas
+
+- Dependencia directa de la estabilidad de la conexión WiFi.  
+- Incremento de consumo de RAM por la carga del certificado TLS.  
+- Sin autenticación en la API REST (solo red local).  
+- El radar requiere calibración manual del servo en cada reinicio.  
+- Latencia promedio de 200–300 ms en la transmisión de datos MQTT.
+
+---
+
+## Oportunidades de Mejora
+
+1. Autenticación bidireccional (mTLS) para reforzar la seguridad en MQTT.  
+2. Implementar control de velocidad PWM dinámico según distancia al obstáculo.  
+3. Desarrollar una aplicación móvil multiplataforma.  
+4. Integrar persistencia de datos (InfluxDB + Grafana) para análisis histórico.  
+5. Añadir un módulo ESP32-CAM para streaming de video en tiempo real.  
+6. Ampliar la detección con sensores IR o LIDAR.  
+7. Optimizar el manejo de memoria y tareas concurrentes mediante FreeRTOS.
+
+---
+
+## Conclusiones Generales
+
+El proyecto Carro IoT 2WD logra consolidar una arquitectura IoT completa con comunicación segura, eficiente y escalable, cumpliendo los objetivos académicos de diseño, implementación y validación de sistemas embebidos conectados.
+
+La integración entre el hardware físico, la comunicación cifrada y la interfaz web representa un modelo funcional aplicable a entornos de automatización, robótica educativa y domótica inteligente.  
+Desde la perspectiva de Ingeniería Informática, el sistema destaca por su:
+
+- Aplicación práctica de los protocolos de red IoT (HTTP + MQTT + TLS).  
+- Diseño modular con posibilidad de ampliación.  
+- Adopción de principios de seguridad informática en la capa de comunicación.  
+- Interfaz gráfica intuitiva y eficiente para control en tiempo real.  
+
+Este proyecto demuestra la viabilidad técnica del uso de microcontroladores de bajo costo en entornos distribuidos de alta confiabilidad, aplicando conceptos fundamentales de computación embebida, redes seguras y sistemas ciberfísicos.
 
 ## Referencias
 
