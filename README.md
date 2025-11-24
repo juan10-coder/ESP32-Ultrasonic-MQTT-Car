@@ -11,15 +11,15 @@ Este documento presenta la estructura del sistema, los endpoints, los tópicos u
 
 ## Abstract
 
-En este proyecto se diseña e implementa una arquitectura IoT para un carro controlado por ESP32.  
-El sistema:
-- Acepta comandos HTTP para moverse en distintas direcciones (adelante, atrás, izquierda, derecha).  
-- Publica cada acción en un tópico MQTT de control.  
-- Simula lecturas de distancia mediante un mock del sensor ultrasónico HC-SR04, que genera valores aleatorios realistas y los envía a un tópico MQTT distinto cada cierto tiempo.  
+This project designs and implements an IoT architecture for a car controlled by ESP32.  
+The system:
+- Accepts HTTP commands to move in different directions (forward, backward, left, right).  
+- Publishes each action in an MQTT control topic.  
+- Simulates distance readings using a mock HC-SR04 ultrasonic sensor, which generates realistic random values and sends them to a different MQTT topic every so often.
 
-La implementación se desarrolló bajo principios de ingeniería modular, empleando un archivo `config.h` para definir variables de preprocesador y facilitar mantenimiento y portabilidad.
+The implementation was developed under modular engineering principles, using a `config.h` file to define preprocessor variables and facilitate maintenance and portability.
 
-**Palabras clave:** IoT, ESP32, MQTT, HC-SR04, Arduino, Simulación, Ingeniería IEEE.
+**Keywords:** IoT, ESP32, MQTT, HC-SR04, Arduino, Simulation, IEEE Engineering.
 
 ---
 
