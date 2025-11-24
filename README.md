@@ -110,7 +110,7 @@ Los datos recolectados se publican de manera continua en los tópicos MQTT `carr
 La interfaz web interpreta estas lecturas y las representa visualmente en un radar que muestra objetos cercanos en color rojo y zonas despejadas en verde.
 
 
-**Usando MicroPython**
+**Usando MicroPython Thonny**
 
 ![Flujo UML](micropython.png)
 
