@@ -86,9 +86,9 @@ graph TD
     A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web: p5.js y MQTT.js]
     B -->|Comandos REST| A
     A -->|Sensor Ultrasónico HC-SR04| C[Detección de Obstáculos]
-    A -->|Publica datos cifrados MQTT TLS| D[(Broker Mosquitto TLS)]
-    D -->|WSS (WebSocket Secure)| B
-    subgraph MQTT Topics
+    A -->|Publica datos cifrados MQTT TLS| D[Broker Mosquitto TLS]
+    D -->|WSS WebSocket Seguro| B
+    subgraph MQTT_Topics
         T1["carro/distancia"]
         T2["carro/mapa"]
         T3["carro/movimiento"]
