@@ -82,7 +82,7 @@ La arquitectura del proyecto se compone de tres capas principales:
 
 ```mermaid
 graph TD
-    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web (p5.js + MQTT.js)]
+    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web)]
     B -->|Comandos REST| A
     A -->|Sensor Ultrasónico HC-SR04| C[Detección de Obstáculos]
     A -->|Publica datos cifrados MQTT TLS| D[(Broker Mosquitto TLS)]
@@ -93,7 +93,6 @@ graph TD
         T3["carro/movimiento"]
     end
 ```
-
 ---
 
 ## Descripción Técnica
@@ -119,34 +118,143 @@ La interfaz web interpreta estas lecturas y las representa visualmente en un rad
 
 ---
 
-## Endpoints HTTP implementados
+## API REST: Endpoints Implementados
 
-| Método | URL | Descripción | Parámetros | Ejemplo |
-|--------|-----|--------------|-------------|----------|
+| Método | Endpoint | Descripción | Ejemplo de Uso | Respuesta Esperada |
+|--------|-----------|--------------|----------------|--------------------|
+| `GET` | `/api/v1/healthcheck` | Comprueba el estado operativo del servidor. | `/api/v1/healthcheck` | `{ "status": "ok", "uptime": 42 }` |
+| `POST` | `/api/v1/move?dir=forward&speed=200` | Envía orden de movimiento. | `/api/v1/move?dir=forward` | `{ "dir": "forward", "speed": 200 }` |
+| `GET` | `/api/v1/move` | Consulta el estado actual del movimiento. | `/api/v1/move` | `{ "dir": "stop" }` |
 | GET | `/status` | Verifica el estado del servidor | — | `{ "status":"Servidor operativo" }` |
 | POST | `/move` | Envía comando de movimiento | `direccion`, `velocidad`, `duracion` | `http://<ip>/move?direccion=adelante&velocidad=200&duracion=3` |
 
-**[Espacio para captura Postman (endpoint /move)]**
+**Colección Postman:** `MQTT-Robot.postman_collection.json`  
+![Flujo UML](Posgrespost.png)
+![Flujo UML](posgresGET.png)
 
 ---
 
-## Tópicos MQTT
+## Tópicos MQTT con Comunicación Segura
 
-| Tópico | Descripción | Ejemplo JSON publicado |
-|--------|--------------|-------------------------|
-| `carro/movimiento` | Envía los datos del movimiento ejecutado | `{ "cliente":"192.168.1.12", "direccion":"adelante", "velocidad":200, "duracion":3 }` |
-| `carro/distancia` | Publica la distancia simulada del sensor mock | `{ "distancia_cm":145.32 }` |
+| Tópico | Dirección | Descripción | Ejemplo JSON |
+|--------|------------|--------------|---------------|
+| `carro/distancia` | Publicación | Muestra la distancia medida por el sensor ultrasónico. | `{ "distance_cm": 112.6 }` |
+| `carro/mapa` | Publicación | Datos de ángulo y distancia usados por el radar web. | `{ "angle_deg": 75, "distance_cm": 45.7 }` |
+| `carro/movimiento` | Publicación | Estado actual del movimiento del vehículo. | `{ "dir": "left", "speed": 200 }` |
+| `carro/comando` | Suscripción | (Futuro) recepción de comandos externos por MQTT. | `{ "action": "stop" }` |
 
-**[Espacio para captura MQTT Explorer con ambos tópicos]**
+Protocolo: MQTT sobre TLS  
+Broker: `test.mosquitto.org`  
+Puerto: `8883`  
+Certificado raíz: ISRG Root X1 (Let's Encrypt)  
+En la interfaz web: comunicación mediante `WSS://test.mosquitto.org:8081/mqtt`
+
+
+![Flujo UML](mqtt1.png)
+![Flujo UML](mqtt2.png)
 
 ---
 
-## Pruebas realizadas
+---
 
-**[Captura 1: Serial Monitor mostrando conexión WiFi y MQTT]**  
-**[Captura 2: Postman ejecutando /move]**  
-**[Captura 3: Mensajes MQTT en carro/movimiento y carro/distancia]**  
-**[Captura 4: Simulación de lecturas del sensor mock cada 5 segundos]**
+## Comunicación Segura (TLS/WSS)
+
+Toda la comunicación entre el ESP32 y el broker MQTT está cifrada utilizando el protocolo TLS 1.2, con el objetivo de garantizar:
+
+- Confidencialidad: protección de los datos transmitidos entre el dispositivo y el servidor.  
+- Integridad: prevención de alteraciones o manipulaciones de los mensajes.  
+- Autenticidad: validación del certificado raíz del servidor broker.
+
+Ejemplo del código de inicialización segura:
+
+```cpp
+WiFiClientSecure secureClient;
+secureClient.setCACert(MQTT_MOSQ_CA);
+PubSubClient mqttClient(secureClient);
+mqttClient.setServer("test.mosquitto.org", 8883);
+```
+
+---
+
+## Flujo de Datos del Sistema
+
+```mermaid
+sequenceDiagram
+    participant Usuario
+    participant WebUI
+    participant ESP32
+    participant MQTT
+    Usuario->>WebUI: Envia comando de movimiento
+    WebUI->>ESP32: POST /api/v1/move
+    ESP32->>Motores: Control L298N
+    ESP32->>Sensor: Lectura ultrasónica
+    ESP32->>MQTT: Publica datos cifrados (distancia/mapa)
+    MQTT-->>WebUI: Transmite datos WSS
+    WebUI-->>Usuario: Visualiza radar y estado del robot
+```
+
+---
+
+## Análisis del Uso de Memoria
+
+Durante la compilación, el entorno Arduino IDE reportó el siguiente uso de memoria:
+
+| Recurso | Uso | Descripción |
+|----------|-----|-------------|
+| Flash | 61% (≈ 850 KB / 1.3 MB) | Código fuente y certificados TLS |
+| RAM | 54% (≈ 171 KB / 320 KB) | MQTT, buffers de red y radar |
+| Heap Libre | ~147 KB | Suficiente para operación continua |
+| Consumo TLS | +17% adicional | Sobrecarga por encriptación y claves SSL |
+
+[Subir imagen aquí: captura del log de compilación con el reporte de memoria]
+
+---
+
+## Librerías y Dependencias
+
+| Librería | Descripción Técnica |
+|-----------|--------------------|
+| WiFi.h | Conexión del ESP32 a redes inalámbricas. |
+| WebServer.h | Implementación del servidor HTTP local. |
+| WiFiClientSecure.h | Soporte para cifrado TLS/SSL. |
+| PubSubClient.h | Cliente MQTT compatible con Mosquitto. |
+| ArduinoJson.h | Serialización de estructuras de datos JSON. |
+| ESP32Servo.h | Control preciso del servo radar. |
+| p5.js / MQTT.js | Gráficos interactivos y conexión WebSocket. |
+
+---
+
+## Pruebas Realizadas
+
+### Prueba 1: Conexión WiFi y API `/healthcheck`
+**Procedimiento:** conectar el ESP32 a una red local e ingresar desde el navegador a la ruta `/api/v1/healthcheck`.  
+**Resultado esperado:** respuesta JSON con estado "ok" y tiempo de actividad.  
+**Estado:** Éxito  
+
+Serial Monitor mostrando conexión WiFi y MQTT
+![Flujo UML](wifimqtt.png)
+
+### Prueba 2: Envío de Comandos HTTP
+**Procedimiento:** enviar comandos `forward`, `left`, `stop` desde la interfaz web y verificar respuesta del servidor.  
+**Resultado esperado:** el vehículo responde con movimiento y respuesta HTTP 200 OK.  
+**Estado:** Éxito  
+![Flujo UML](prueba2.png)
+
+---
+
+### Prueba 3: Comunicación MQTT TLS
+**Procedimiento:** suscribirse a `carro/distancia` y `carro/mapa` desde MQTT Explorer con puerto 8883 (TLS).  
+**Resultado esperado:** recepción periódica de datos JSON con distancia y ángulo.  
+**Estado:** Éxito  
+![Flujo UML](mqtt1.png)
+
+---
+
+### Prueba 4: Radar Web y Representación Gráfica
+**Procedimiento:** abrir la interfaz web y visualizar los objetos detectados en el radar.  
+**Resultado esperado:** zonas verdes (libres) y rojas (obstáculos).  
+**Estado:** Éxito 
+![Flujo UML](pruebaradar.png)
 
 ---
 
@@ -336,9 +444,9 @@ contra ataques MitM.
   ------------------------------------------------------------------------------------
   Prueba    Cliente              Puerto    Certificado     Resultado     Seguridad
   --------- -------------------- --------- --------------- ------------- -------------
-  1         WiFiClient           8883      No              ❌ Falla      N/A
+  1         WiFiClient           8883      si              ❌ Falla      N/A
 
-  2         WiFiClientSecure +   8883      No              ✔ Funciona    ⚠ Vulnerable
+  2         WiFiClientSecure +   8883      si              ✔ Funciona    ⚠ Vulnerable
             setInsecure()                                                MitM
 
   3         WiFiClientSecure     8883      No              ❌ Falla      N/A
