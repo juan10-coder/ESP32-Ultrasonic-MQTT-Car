@@ -83,7 +83,7 @@ La arquitectura del proyecto se compone de tres capas principales:
 
 ```mermaid
 graph TD
-    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web (p5.js + MQTT.js)]
+    A[ESP32 Controlador] -->|HTTP POST /move| B[Interfaz Web: p5.js y MQTT.js]
     B -->|Comandos REST| A
     A -->|Sensor Ultrasónico HC-SR04| C[Detección de Obstáculos]
     A -->|Publica datos cifrados MQTT TLS| D[(Broker Mosquitto TLS)]
