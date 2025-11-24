@@ -112,11 +112,11 @@ La interfaz web interpreta estas lecturas y las representa visualmente en un rad
 
 **Usando MicroPython**
 
-![Flujo UML](montajefisicoIOT.png)
+![Flujo UML](micropython.png)
 
 **Usando C++ Arduino IDE**
 
-![Flujo UML](micropython.png)
+![Flujo UML](c++.png)
 
 ---
 
