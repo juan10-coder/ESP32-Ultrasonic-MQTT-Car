@@ -74,10 +74,12 @@ La arquitectura del proyecto se compone de tres capas principales:
 3. **Capa de Comunicación:**  
    Basada en HTTP (API REST) para los comandos de movimiento y MQTT con cifrado TLS para la transmisión de datos de sensores en tiempo real hacia la interfaz web.
 
+![Flujo UML](DiagramaSistema.png)
+
 4. **Capa de Visualización y Control:**  
    Desarrollada en HTML, CSS, p5.js y MQTT.js, muestra la distancia detectada, el radar en tiempo real y permite el control remoto del vehículo.
 
-![Flujo UML](DiagramaSistema.png)
+![Flujo UML](pruebaradar.png)
 
 ### Diagrama de Arquitectura del Sistema
 
